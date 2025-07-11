@@ -229,20 +229,20 @@ class _ParkingLotDetailPageState extends State<ParkingLotDetailPage> {
 
           if (slotLabel.isEmpty) return Expanded(child: SizedBox());
 
-          bool isAvailable = status.toLowerCase() == 'tersedia';
+          bool isAvailable = status.toLowerCase() == 'available';
           bool isSelected = slotLabel == selectedSlot;
 
           Color bgColor;
           Widget childContent;
 
-          if (status.toLowerCase() == 'terisi') {
+          if (status.toLowerCase() == 'occupied') {
             bgColor = Colors.red.shade100;
             childContent = Image.asset('assets/car-terisi.png');
-          } else if (status.toLowerCase() == 'occupied') {
+          } else if (status.toLowerCase() == 'booked') {
             bgColor = Colors.orange.shade100;
             childContent = Center(
               child: Text(
-                'Occupied',
+                'Booked',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.orange.shade800,

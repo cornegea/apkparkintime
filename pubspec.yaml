@@ -46,6 +46,7 @@ dependencies:
   share_plus: ^7.2.1
   url_launcher: ^6.2.5
   webview_flutter: ^4.13.0
+  flutter_svg: ^2.2.0
 
 dev_dependencies:
   flutter_test:
@@ -87,7 +88,7 @@ flutter:
     - assets/empty_car.png
     - assets/car-terisi.png
     - assets/mycar.png
-
+    - assets/reservation_illustration.svg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

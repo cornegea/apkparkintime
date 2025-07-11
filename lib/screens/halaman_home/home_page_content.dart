@@ -227,7 +227,7 @@ class _HomePageContentState extends State<HomePageContent> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color.fromARGB(255, 237, 235, 235),
+        color: Color(0XFFB5D0ED),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
