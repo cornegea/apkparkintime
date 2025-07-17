@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'halaman_home/home_screen.dart';
 import 'register_screen.dart';
+import 'forgot_password_webview.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -185,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 50,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
+                                backgroundColor: Color(0xFF629584),
                                 shape: StadiumBorder(),
                               ),
                               onPressed: login,
@@ -203,10 +204,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ForgotPasswordWebView(),
+                                ),
+                              );
+                            },
                             child: Text(
                               "Forgot Password?",
-                              style: TextStyle(color: Colors.green),
+                              style: TextStyle(color: Color(0xFF629584), fontWeight: FontWeight.bold,),
                             ),
                           ),
                           TextButton(
@@ -219,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                             child: Text(
                               "Create Account",
-                              style: TextStyle(color: Colors.green),
+                              style: TextStyle(color: Color(0xFF629584), fontWeight: FontWeight.bold,),
                             ),
                           ),
                         ],

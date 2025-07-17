@@ -226,7 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed:
                       _isLoading ? null : registerUser, // disable saat loading
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF2ECC40),
+                    backgroundColor: Color(0xFF629584),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -263,7 +263,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Text(
                       "Sign In",
                       style: GoogleFonts.poppins(
-                        color: Color(0xFF2ECC40), // hijau terang
+                        color: Color(0xFF629584), // hijau terang
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),

@@ -154,7 +154,7 @@ class _HomePageContentState extends State<HomePageContent> {
         onRefresh: _handleRefresh,
         child: Container(
           height: double.infinity,
-          color: const Color.fromARGB(255, 238, 232, 232),
+          color: const Color.fromARGB(255, 225, 223, 223),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
@@ -427,54 +427,63 @@ class _HomePageContentState extends State<HomePageContent> {
   }
 
   Widget _buildParkingSpotSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Parking Spot",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 4),
-              Container(
-                height: 2,
-                width: 40,
-                color: Color(0xFF2ECC40),
-              ),
-            ],
-          ),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Parking Spot",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 4),
+            Container(
+              height: 2,
+              width: 40,
+              color: Color(0xFF2ECC40),
+            ),
+          ],
         ),
-        const SizedBox(height: 15),
-        Container(
-          height: 180,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: parkingLots.length,
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            itemBuilder: (context, index) {
-              final lot = parkingLots[index];
-              final availableSlots = lot['slot_tersedia'] ?? 0;
-              
-              // --- LANGKAH 2: Mengirim ID Lahan ke _buildParkingCard ---
-              final String lahanId = lot['id']?.toString() ?? '';
+      ),
+      const SizedBox(height: 15),
+      Container(
+        height: 180,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: parkingLots.length,
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          itemBuilder: (context, index) {
+            final lot = parkingLots[index];
 
-              return _buildParkingCard(
-                lahanId, // Kirim ID
-                lot['nama_lokasi'] ?? 'Unknown',
-                lot['foto'] ?? '',
-                availableSlots,
-              );
-            },
-          ),
+            // --- PERUBAHAN DIMULAI DI SINI ---
+
+            // 1. Ambil data 'kapasitas' dan 'terisi' dari API
+            final int kapasitas = lot['kapasitas'] ?? 0;
+            final int terisi = lot['terisi'] ?? 0;
+            
+            // 2. Hitung jumlah slot yang tersedia
+            final int tersedia = kapasitas - terisi;
+
+            // --- AKHIR PERUBAHAN ---
+            
+            final String lahanId = lot['id']?.toString() ?? '';
+
+            // 3. Gunakan variabel 'tersedia' yang sudah dihitung
+            return _buildParkingCard(
+              lahanId,
+              lot['nama_lokasi'] ?? 'Unknown',
+              lot['foto'] ?? '',
+              tersedia,
+            );
+          },
         ),
-      ],
-    );
-  }
-
+      ),
+    ],
+  );
+}
   // --- LANGKAH 2 (Lanjutan): Update signature dan bungkus dengan GestureDetector ---
   Widget _buildParkingCard(String id, String title, String foto, int availableSlots) {
     return GestureDetector( // <-- LANGKAH 3: Bungkus dengan GestureDetector

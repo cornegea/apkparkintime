@@ -6,9 +6,8 @@ import 'package:parkintime/screens/reservation/select_vehicle.dart';
 class ParkingLotDetailPage extends StatefulWidget {
   final String id_lahan;
 
-  const ParkingLotDetailPage({Key? key,
-    required this.id_lahan
-  }) : super(key: key);
+  const ParkingLotDetailPage({Key? key, required this.id_lahan})
+    : super(key: key);
 
   @override
   _ParkingLotDetailPageState createState() => _ParkingLotDetailPageState();
@@ -50,13 +49,15 @@ class _ParkingLotDetailPageState extends State<ParkingLotDetailPage> {
   Future<void> fetchSlotsByLahan(String idLahan) async {
     try {
       final response = await http.get(
-        Uri.parse('https://app.parkintime.web.id/flutter/get_slot.php?id_lahan=$idLahan'),
+        Uri.parse(
+          'https://app.parkintime.web.id/flutter/get_slot.php?id_lahan=$idLahan',
+        ),
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> slotJson = json.decode(response.body);
         final List<SlotParkir> fetchedSlots =
-        slotJson.map((json) => SlotParkir.fromJson(json)).toList();
+            slotJson.map((json) => SlotParkir.fromJson(json)).toList();
 
         final Set<String> areaSet = fetchedSlots.map((e) => e.area).toSet();
 
@@ -81,9 +82,10 @@ class _ParkingLotDetailPageState extends State<ParkingLotDetailPage> {
     }
   }
 
-  List<SlotParkir> get filteredSlots => selectedArea == null
-      ? []
-      : allSlots.where((slot) => slot.area == selectedArea).toList();
+  List<SlotParkir> get filteredSlots =>
+      selectedArea == null
+          ? []
+          : allSlots.where((slot) => slot.area == selectedArea).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -102,11 +104,7 @@ class _ParkingLotDetailPageState extends State<ParkingLotDetailPage> {
           ),
         ),
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_rounded,
-            color: Colors.white,
-            size: 28,
-          ),
+          icon: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -115,24 +113,30 @@ class _ParkingLotDetailPageState extends State<ParkingLotDetailPage> {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
         color: Color.fromARGB(255, 245, 245, 245),
         child: ElevatedButton(
-          onPressed: selectedSlot != null
-              ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SelectVehiclePage(
-                        kodeslot: selectedSlot!,
-                        id_lahan: widget.id_lahan,
+          onPressed:
+              selectedSlot != null
+                  ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => SelectVehiclePage(
+                              kodeslot: selectedSlot!,
+                              id_lahan: widget.id_lahan,
+                            ),
                       ),
-                    ),
-                  );
-                }
-              : null,
+                    );
+                  }
+                  : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: selectedSlot != null ? Color(0xFF2ECC40) : Colors.grey,
-            
+            backgroundColor:
+                selectedSlot != null ? Color(0xFF629584) : Colors.grey,
+
             // --- PERBAIKAN UTAMA: Mengatur ukuran tombol ---
-            fixedSize: const Size(double.infinity, 35), // Lebar penuh, Tinggi 55
+            fixedSize: const Size(
+              double.infinity,
+              40,
+            ), // Lebar penuh, Tinggi 55
 
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -157,46 +161,48 @@ class _ParkingLotDetailPageState extends State<ParkingLotDetailPage> {
               scrollDirection: Axis.horizontal,
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Row(
-                children: uniqueAreas.map((area) {
-                  final isSelected = area == selectedArea;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          selectedArea = area;
-                          selectedSlot = null;
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                        isSelected ? Color(0xFF629584) : Colors.white,
-                        foregroundColor:
-                        isSelected ? Colors.white : Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(color: Color(0xFF2ECC40)),
+                children:
+                    uniqueAreas.map((area) {
+                      final isSelected = area == selectedArea;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedArea = area;
+                              selectedSlot = null;
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isSelected ? Color(0xFF629584) : Colors.white,
+                            foregroundColor:
+                                isSelected ? Colors.white : Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: Color(0xFF2ECC40)),
+                            ),
+                          ),
+                          child: Text('$area'),
                         ),
-                      ),
-                      child: Text('$area'),
-                    ),
-                  );
-                }).toList(),
+                      );
+                    }).toList(),
               ),
             ),
           ),
           // Daftar Slot
           Expanded(
-            child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: Colors.green))
-                : filteredSlots.isEmpty && !_isLoading
+            child:
+                _isLoading
+                    ? Center(
+                      child: CircularProgressIndicator(color: Colors.green),
+                    )
+                    : filteredSlots.isEmpty && !_isLoading
                     ? Center(child: Text("No slots available in this area."))
                     : SingleChildScrollView(
-                        padding: EdgeInsets.all(16),
-                        child: Column(
-                          children: buildSlotWidgets(),
-                        ),
-                      ),
+                      padding: EdgeInsets.all(16),
+                      child: Column(children: buildSlotWidgets()),
+                    ),
           ),
         ],
       ),
@@ -207,7 +213,8 @@ class _ParkingLotDetailPageState extends State<ParkingLotDetailPage> {
     List<Widget> widgets = [];
     for (int i = 0; i < filteredSlots.length; i += 2) {
       final first = filteredSlots[i];
-      final second = (i + 1 < filteredSlots.length) ? filteredSlots[i + 1] : null;
+      final second =
+          (i + 1 < filteredSlots.length) ? filteredSlots[i + 1] : null;
 
       widgets.add(
         _buildParkingRow(
@@ -249,7 +256,8 @@ class _ParkingLotDetailPageState extends State<ParkingLotDetailPage> {
                 ),
               ),
             );
-          } else { // Tersedia
+          } else {
+            // Tersedia
             bgColor = isSelected ? Color(0xFF2ECC40) : Colors.green.shade100;
             childContent = Center(
               child: Text(
@@ -264,13 +272,15 @@ class _ParkingLotDetailPageState extends State<ParkingLotDetailPage> {
 
           return Expanded(
             child: GestureDetector(
-              onTap: isAvailable
-                  ? () {
-                      setState(() {
-                        selectedSlot = slotLabel == selectedSlot ? null : slotLabel;
-                      });
-                    }
-                  : null,
+              onTap:
+                  isAvailable
+                      ? () {
+                        setState(() {
+                          selectedSlot =
+                              slotLabel == selectedSlot ? null : slotLabel;
+                        });
+                      }
+                      : null,
               child: Container(
                 height: 80,
                 margin: EdgeInsets.symmetric(horizontal: 4),

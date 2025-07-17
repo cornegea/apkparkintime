@@ -33,7 +33,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   final String _fetchUrl = "https://app.parkintime.web.id/flutter/car.php";
   final String _submitUrl = "https://app.parkintime.web.id/flutter/add_car.php";
 
-  // --- [MODIFIKASI] State untuk validasi tombol manual ---
+  // --- State untuk validasi tombol manual ---
   bool _isPlateFilled = false;
   bool _isChassisFilled = false;
   bool _isConnectionFailed = false;
@@ -53,7 +53,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
     });
   }
 
-
   Future<void> _fetchVehicleData() async {
     // Jangan fetch jika sedang dalam mode manual
     if (_isManualMode) return;
@@ -61,13 +60,11 @@ class _AddCarScreenState extends State<AddCarScreen> {
     final plat = _plateController.text.trim().toUpperCase();
     final rangka = _chassisController.text.trim();
 
-    // Panggil _updateInputStatus untuk memastikan state ter-update
     _updateInputStatus();
 
     if (plat.isEmpty || rangka.length != 4) {
       setState(() {
         _vehicleData = null;
-        // Reset pesan jika input tidak valid
         _message = null;
         _isConnectionFailed = false;
       });
@@ -110,7 +107,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
         setState(() {
           _vehicleData = null;
           _message = data['message'] ?? 'Failed to fetch data. Try again or add manually.';
-          // Cek jika pesan dari server BUKAN kegagalan koneksi
           _isConnectionFailed = false;
         });
       }
@@ -118,7 +114,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
       setState(() {
         _vehicleData = null;
         _message = "Failed to connect to server. Check your connection or add car manually.";
-        // --- [MODIFIKASI] Set flag koneksi gagal menjadi true ---
         _isConnectionFailed = true;
       });
     } finally {
@@ -213,7 +208,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
   @override
   void dispose() {
-    // Jangan lupa remove listener untuk menghindari memory leak
     _plateController.removeListener(_updateInputStatus);
     _chassisController.removeListener(_updateInputStatus);
     _plateController.dispose();
@@ -232,7 +226,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // --- [MODIFIKASI] Definisikan kondisi untuk menampilkan tombol manual di sini agar lebih rapi ---
     final bool shouldShowManualButton = _isPlateFilled &&
         _isChassisFilled &&
         _isConnectionFailed &&
@@ -262,12 +255,40 @@ class _AddCarScreenState extends State<AddCarScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      // --- [PERBAIKAN FINAL] ---
+      // Bungkus dengan SafeArea agar tidak terpotong navigasi sistem
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: (_vehicleData != null || _isManualMode) && !_isLoading
+                  ? _addCar
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF629584),
+                disabledBackgroundColor: Colors.grey,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isLoading
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text("Add Car",
+                      style: TextStyle(fontSize: 16, color: Colors.white)),
+            ),
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text("* Vehicle data must match the original vehicle data. Currently only available for the Riau Islands province",
+            Text(
+                "* Vehicle data must match the original vehicle data. Currently only available for the Riau Islands province",
                 style: TextStyle(color: Colors.red, fontSize: 12)),
             const SizedBox(height: 16),
             Container(
@@ -282,7 +303,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 child: TextField(
                   controller: _plateController,
                   readOnly: _isManualMode,
-                  // Gunakan onChanged untuk memanggil fetch data
                   onChanged: (value) => _fetchVehicleData(),
                   inputFormatters: [
                     FilteringTextInputFormatter.deny(RegExp(r'\s')),
@@ -303,16 +323,15 @@ class _AddCarScreenState extends State<AddCarScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
+            
             if (!_isManualMode) _buildApiSearchSection(),
-
+            
             if (_isLoading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 32.0),
                 child: Center(child: CircularProgressIndicator()),
               ),
-
-            // --- [MODIFIKASI] Tampilkan pesan error jika ada ---
+            
             if (_message != null && !_isLoading && !_isManualMode)
               Padding(
                 padding: const EdgeInsets.only(top: 16.0),
@@ -322,35 +341,16 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-
-            // --- [MODIFIKASI] Gunakan kondisi yang sudah didefinisikan untuk menampilkan tombol manual ---
-            if (shouldShowManualButton)
-              _buildManualButton(),
+            
+            if (shouldShowManualButton) _buildManualButton(),
 
             if (_vehicleData != null && !_isLoading && !_isManualMode)
               _buildVehicleDataDisplay(),
 
             if (_isManualMode) _buildManualForm(),
 
-            const SizedBox(height: 30),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: (_vehicleData != null || _isManualMode) && !_isLoading ? _addCar : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF629584),
-                  disabledBackgroundColor: Colors.grey,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: _isLoading
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text("Add Car", style: TextStyle(fontSize: 16, color: Colors.white)),
-              ),
-            ),
+            // SizedBox di akhir untuk memberi ruang agar konten terakhir tidak tertutup tombol
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -365,7 +365,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: _chassisController,
-          // Gunakan onChanged untuk memanggil fetch data
           onChanged: (value) => _fetchVehicleData(),
           keyboardType: TextInputType.text,
           inputFormatters: [UpperCaseTextFormatter()],
@@ -383,7 +382,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
     );
   }
 
-  // --- [MODIFIKASI] Widget ini sekarang hanya untuk tombol, pesannya ditampilkan terpisah ---
   Widget _buildManualButton() {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -393,7 +391,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
           onPressed: () {
             setState(() {
               _isManualMode = true;
-              _message = null; // Hapus pesan error agar tidak tumpang tindih
+              _message = null;
             });
           },
           style: ElevatedButton.styleFrom(
@@ -437,7 +435,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
               children: [
                 Expanded(
                   flex: 4,
-                  child: Text("${entry.key}:", style: TextStyle(fontWeight: FontWeight.w500)),
+                  child:
+                      Text("${entry.key}:", style: TextStyle(fontWeight: FontWeight.w500)),
                 ),
                 Expanded(
                   flex: 5,
@@ -458,23 +457,34 @@ class _AddCarScreenState extends State<AddCarScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 16),
-          Text("Please fill in the vehicle details manually:", style: Theme.of(context).textTheme.titleMedium),
+          Text("Please fill in the vehicle details manually:",
+              style: Theme.of(context).textTheme.titleMedium),
           SizedBox(height: 16),
-          _buildManualTextField(_ownerController, "Name of Owner", "Example: Budi Santoso"),
+          _buildManualTextField(
+              _ownerController, "Name of Owner", "Example: Budi Santoso"),
           _buildManualTextField(_brandController, "Brand", "Example: TOYOTA"),
           _buildManualTextField(_typeController, "Type", "Example: AVANZA"),
-          _buildManualTextField(_categoryController, "Category", "Example: MINIBUS"),
+          _buildManualTextField(
+              _categoryController, "Category", "Example: MINIBUS"),
           _buildManualTextField(_colorController, "Color", "Example: HITAM"),
-          _buildManualTextField(_yearController, "Manufacture Year", "Example: 2022", keyboardType: TextInputType.number),
-          _buildManualTextField(_capacityController, "Cylinder Capacity", "Example: 1500", keyboardType: TextInputType.number),
-          _buildManualTextField(_energyController, "Energy Source", "Example: BENSIN"),
-          _buildManualTextField(_plateColorController, "License Plate Color", "Example: HITAM"),
+          _buildManualTextField(
+              _yearController, "Manufacture Year", "Example: 2022",
+              keyboardType: TextInputType.number),
+          _buildManualTextField(
+              _capacityController, "Cylinder Capacity", "Example: 1500",
+              keyboardType: TextInputType.number),
+          _buildManualTextField(
+              _energyController, "Energy Source", "Example: BENSIN"),
+          _buildManualTextField(
+              _plateColorController, "License Plate Color", "Example: HITAM"),
         ],
       ),
     );
   }
 
-  Widget _buildManualTextField(TextEditingController controller, String label, String hint, {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildManualTextField(
+      TextEditingController controller, String label, String hint,
+      {TextInputType keyboardType = TextInputType.text}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
@@ -485,8 +495,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
             labelText: label,
             hintText: hint,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10)
-        ),
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'This field cannot be empty';
@@ -498,6 +508,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   }
 }
 
+// Helper class untuk membuat input menjadi huruf kapital
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(

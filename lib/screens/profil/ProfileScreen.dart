@@ -86,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5), // Warna background lebih cerah
+      backgroundColor: const Color.fromARGB(255, 225, 224, 224), // Warna background lebih cerah
       body: Stack(
         children: [
           // --- PERBAIKAN: Header dibuat terpisah untuk efek tumpuk ---

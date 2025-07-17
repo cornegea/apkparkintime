@@ -5,6 +5,207 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:parkintime/screens/ticket_page.dart';
 
+// [NEW] Widget for the empty state view
+class EmptyHistoryWidget extends StatelessWidget {
+  final VoidCallback onRefresh;
+
+  const EmptyHistoryWidget({Key? key, required this.onRefresh}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.history_toggle_off,
+                      size: 80,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      "History is Empty",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "All parking tickets you have used or canceled will appear here.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.refresh),
+                      label: const Text("Try Again"),
+                      onPressed: onRefresh,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF629584), // Correct parameter
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        textStyle: const TextStyle(fontSize: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// [NEW] Widget to display each history item as a card
+class HistoryItemCard extends StatelessWidget {
+  final HistoryItem item;
+
+  const HistoryItemCard({Key? key, required this.item}) : super(key: key);
+
+  // Helper to get an icon based on parking type
+  IconData _getIconForType(String type) {
+    switch (type.toLowerCase()) {
+      case 'car': // Changed from 'mobil'
+        return Icons.directions_car;
+      case 'motorcycle': // Changed from 'motor'
+        return Icons.two_wheeler;
+      default:
+        return Icons.receipt_long;
+    }
+  }
+
+  // Helper to get the status color
+  Color _getColorForStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green;
+      case 'canceled':
+        return Colors.red;
+      case 'valid':
+        return Colors.blue;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Helper to format the status text (e.g., "completed" -> "Completed")
+  String _formatStatusText(String status) {
+    if (status.isEmpty) return "Unknown";
+    return status[0].toUpperCase() + status.substring(1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.only(bottom: 16),
+      shadowColor: Colors.black.withOpacity(0.1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: () {
+          // Navigation when the card is tapped
+          if (item.status.toLowerCase() != 'canceled') {
+             Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TicketPage(ticketId: item.ticketId),
+              ),
+            );
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // 1. Vehicle Type Icon
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: const Color(0xFF629584).withOpacity(0.1),
+                child: Icon(
+                  _getIconForType(item.jenis),
+                  size: 28,
+                  color: const Color(0xFF629584),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // 2. Detailed Information
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.namaLokasi,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "ID: ${item.orderId ?? 'N/A'} • Slot: ${item.kodeSlot}",
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat('d MMMM y, HH:mm').format(item.waktuMasuk),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 3. Status Tag
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: _getColorForStatus(item.status).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _formatStatusText(item.status),
+                  style: TextStyle(
+                    color: _getColorForStatus(item.status),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =========================================================================
+// MAIN SCREEN CLASS
+// =========================================================================
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
 
@@ -41,6 +242,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<void> fetchHistory() async {
     if (_idAkun == null) return;
+    if(!mounted) return;
     setState(() {
       _isLoading = true;
     });
@@ -51,270 +253,129 @@ class _HistoryScreenState extends State<HistoryScreen> {
         body: {"id_akun": _idAkun.toString()},
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && mounted) {
         final data = jsonDecode(response.body);
         if (data['success']) {
           setState(() {
-            _historyItems = (data['data'] as List)
-                .map((item) => HistoryItem.fromJson(item))
-                .toList();
+            _historyItems =
+                (data['data'] as List)
+                    .map((item) => HistoryItem.fromJson(item))
+                    .toList();
           });
         }
       }
     } catch (e) {
-      // Handle error, maybe show a snackbar
       print(e);
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load history. Check your connection.'), backgroundColor: Colors.red),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if(mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color.fromARGB(255, 225, 223, 223),
+      // [CHANGED] Using a more standard AppBar
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF629584),
+        elevation: 1,
+      ),
       body: Column(
         children: [
-          Container(
-            height: 70,
-            width: double.infinity,
-            color: Color(0xFF629584),
-            alignment: Alignment.bottomCenter,
-          ),
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(filters.length, (index) {
-                final isSelected = _selectedIndex == index;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Color(0xFF629584): Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green),
-                    ),
-                    child: Text(
-                      filters[index],
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Color(0xFF629584),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const Divider(height: 1, thickness: 1),
+          _buildFilterChips(),
           Expanded(child: _buildContentForTab()),
         ],
+      ),
+    );
+  }
+  
+  // [CHANGED] Filter widget extracted for cleaner code
+  Widget _buildFilterChips() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(filters.length, (index) {
+          final isSelected = _selectedIndex == index;
+          return ChoiceChip(
+            label: Text(filters[index]),
+            selected: isSelected,
+            onSelected: (bool selected) {
+              if (selected) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+              }
+            },
+            backgroundColor: Colors.white,
+            selectedColor: const Color(0xFF629584),
+            labelStyle: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFF629584),
+              fontWeight: FontWeight.w600,
+            ),
+            shape: StadiumBorder(
+              side: BorderSide(
+                color: isSelected ? const Color(0xFF629584) : Colors.grey.shade400,
+              )
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          );
+        }),
       ),
     );
   }
 
   Widget _buildContentForTab() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF629584)));
     }
 
     String selectedFilter = filters[_selectedIndex].toLowerCase();
-    final filteredItems = _historyItems.where((item) {
-      String itemStatus = item.status.toLowerCase();
-      if (selectedFilter == "valid") {
-        return itemStatus == "valid" || itemStatus == "pending";
-      }
-      return itemStatus == selectedFilter;
-    }).toList();
-
+    final filteredItems =
+        _historyItems.where((item) {
+          String itemStatus = item.status.toLowerCase();
+          // Filter logic: "Valid" includes both "valid" and "pending"
+          if (selectedFilter == "valid") {
+            return itemStatus == "valid" || itemStatus == "pending";
+          }
+          return itemStatus == selectedFilter;
+        }).toList();
+        
+    // [CHANGED] Using the new EmptyHistoryWidget when data is empty
+    if (filteredItems.isEmpty) {
+      return EmptyHistoryWidget(onRefresh: fetchHistory);
+    }
+    
+    // [CHANGED] Using the new HistoryItemCard to display data
     return RefreshIndicator(
       onRefresh: fetchHistory,
-      child: filteredItems.isEmpty
-          ? ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 200),
-          Center(child: Text("No history found.")),
-        ],
-      )
-          : ListView.builder(
-        padding: const EdgeInsets.all(20),
+      color: const Color(0xFF629584),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
         itemCount: filteredItems.length,
         itemBuilder: (context, index) {
           final item = filteredItems[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TicketPage(ticketId: item.ticketId),
-                ),
-              );
-            },
-            child: _buildHistoryCardFromModel(item),
-          );
+          // Using the new card widget
+          return HistoryItemCard(item: item);
         },
-      ),
-    );
-  }
-
-  Widget _buildHistoryCardFromModel(HistoryItem item) {
-    final masuk = item.waktuMasuk;
-    final keluar = item.waktuKeluar ?? masuk;
-    final duration = keluar.difference(masuk);
-    final dateText =
-        "${DateFormat('d MMMM y').format(masuk)} - ${DateFormat('HH.mm').format(masuk)}";
-
-    return _buildHistoryCard(
-      // <<< DIUBAH: Mengirim orderId ke widget kartu
-      orderId: item.orderId ?? 'NO ID',
-      date: dateText,
-      location: item.namaLokasi,
-      slot: item.kodeSlot,
-      duration: "${duration.inHours} Hours",
-      statusWidget: _buildStatusBoxFromStatus(item),
-    );
-  }
-
-  Widget _buildStatusBoxFromStatus(HistoryItem item) {
-    final status = item.status.toLowerCase();
-
-    switch (status) {
-      case "pending":
-        return _buildTextStatusBox("Waiting for payment", Colors.orange, Colors.white);
-      case "valid":
-        return _buildStatusBox(
-          title: "Valid until",
-          date: DateFormat('d MMMM y').format(item.waktuKeluar ?? item.waktuMasuk),
-          time: DateFormat('HH.mm').format(item.waktuKeluar ?? item.waktuMasuk),
-          color: Colors.blue,
-        );
-      case "completed":
-        return _buildTextStatusBox("Completed", Color(0xFF629584), Colors.white);
-      case "canceled":
-        return _buildTextStatusBox("Canceled", Colors.red, Colors.white);
-      default:
-        return _buildTextStatusBox(item.status, Colors.grey, Colors.white);
-    }
-  }
-
-  Widget _buildStatusBox({
-    required String title,
-    required String date,
-    required String time,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        children: [
-          Text(title, style: const TextStyle(color: Colors.white, fontSize: 12)),
-          const SizedBox(height: 2),
-          Text(date, style: const TextStyle(color: Colors.white, fontSize: 12)),
-          const SizedBox(height: 4),
-          Text(
-            time,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextStatusBox(String text, Color bgColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  // <<< DIUBAH: Mengganti parameter 'ticket' menjadi 'orderId'
-  Widget _buildHistoryCard({
-    required String orderId,
-    required String date,
-    required String location,
-    required String slot,
-    required String duration,
-    required Widget statusWidget,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // <<< DIUBAH: Menampilkan orderId
-              Text(orderId, style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text(date, style: const TextStyle(fontSize: 12)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      location,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(slot),
-                    Text(duration),
-                  ],
-                ),
-              ),
-              statusWidget,
-            ],
-          ),
-        ],
       ),
     );
   }
 }
 
+// HistoryItem Model Class (with improved null-safety checks)
 class HistoryItem {
   final int ticketId;
-  // <<< DIUBAH: Menambahkan properti orderId
   final String? orderId;
   final String status;
   final DateTime waktuMasuk;
@@ -326,7 +387,6 @@ class HistoryItem {
 
   HistoryItem({
     required this.ticketId,
-    // <<< DIUBAH: Menambahkan orderId ke constructor
     this.orderId,
     required this.status,
     required this.waktuMasuk,
@@ -339,18 +399,18 @@ class HistoryItem {
 
   factory HistoryItem.fromJson(Map<String, dynamic> json) {
     return HistoryItem(
-      ticketId: int.tryParse(json['tiket_id'].toString()) ?? 0,
-      // <<< DIUBAH: Mengambil data 'order_id' dari JSON
+      ticketId: int.tryParse(json['tiket_id']?.toString() ?? '0') ?? 0,
       orderId: json['order_id'],
-      status: json['status'],
-      waktuMasuk: DateTime.parse(json['waktu_masuk']),
-      waktuKeluar: json['waktu_keluar'] != null && json['waktu_keluar'] != ''
-          ? DateTime.tryParse(json['waktu_keluar'])
-          : null,
-      biayaTotal: int.tryParse(json['biaya_total'].toString()) ?? 0,
-      kodeSlot: json['kode_slot'],
-      namaLokasi: json['nama_lokasi'],
-      jenis: json['jenis'],
+      status: json['status'] ?? 'Unknown',
+      waktuMasuk: DateTime.parse(json['waktu_masuk'] ?? DateTime.now().toIso8601String()),
+      waktuKeluar:
+          json['waktu_keluar'] != null && json['waktu_keluar'].toString().isNotEmpty
+              ? DateTime.tryParse(json['waktu_keluar'])
+              : null,
+      biayaTotal: int.tryParse(json['biaya_total']?.toString() ?? '0') ?? 0,
+      kodeSlot: json['kode_slot'] ?? 'N/A',
+      namaLokasi: json['nama_lokasi'] ?? 'Location Not Found',
+      jenis: json['jenis'] ?? 'General',
     );
   }
 }

@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:parkintime/screens/payment_webview_page.dart'; // Make sure this import is correct
 
-// Model untuk menampung data tiket dari API
+// Model Ticket (no changes needed here)
 class Ticket {
-  final String orderId; // <-- DITAMBAHKAN
+  final String orderId;
   final String status;
   final String nomorPlat;
   final String jenisKendaraan;
@@ -18,9 +19,10 @@ class Ticket {
   final String tarifPerJam;
   final String total;
   final String statusPembayaran;
+  final String? redirectUrl;
 
   Ticket({
-    required this.orderId, // <-- DITAMBAHKAN
+    required this.orderId,
     required this.status,
     required this.nomorPlat,
     required this.jenisKendaraan,
@@ -33,13 +35,13 @@ class Ticket {
     required this.tarifPerJam,
     required this.total,
     required this.statusPembayaran,
+    this.redirectUrl,
   });
 
-  // Factory constructor untuk membuat instance Ticket dari JSON
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
-      orderId: json['order_id'] ?? '', // <-- DITAMBAHKAN
-      status: json['status'] ?? 'Unknown',
+      orderId: json['order_id'] ?? '',
+      status: (json['status'] as String? ?? 'Unknown').toLowerCase(),
       nomorPlat: json['nomor_plat'],
       jenisKendaraan: json['jenis_kendaraan'],
       parkingArea: json['parking_area'],
@@ -51,12 +53,13 @@ class Ticket {
       tarifPerJam: json['tarif_per_jam'],
       total: json['total'],
       statusPembayaran: json['status_pembayaran'],
+      redirectUrl: json['redirect_url'],
     );
   }
 }
 
 class TicketPage extends StatefulWidget {
-  final int ticketId; // ID tiket yang akan diambil
+  final int ticketId;
 
   const TicketPage({Key? key, required this.ticketId}) : super(key: key);
 
@@ -73,46 +76,98 @@ class _TicketPageState extends State<TicketPage> {
     futureTicket = fetchTicket();
   }
 
-  // Fungsi untuk mengambil data dari API
   Future<Ticket> fetchTicket() async {
-    // GANTI DENGAN URL API ANDA
     final apiUrl =
         'https://app.parkintime.web.id/flutter/tiket.php?id=${widget.ticketId}';
-
     try {
       final response = await http.get(Uri.parse(apiUrl));
-
       if (response.statusCode == 200) {
-        // Jika server merespons dengan OK, parse JSON.
         final jsonResponse = json.decode(response.body);
         if (jsonResponse['status'] == 'success') {
           return Ticket.fromJson(jsonResponse['data']);
         } else {
-          // Jika status dari API adalah error
-          throw Exception('Gagal memuat tiket: ${jsonResponse['message']}');
+          throw Exception('Failed to load ticket: ${jsonResponse['message']}');
         }
       } else {
-        // Jika server tidak merespons dengan OK.
         throw Exception(
-          'Gagal terhubung ke server. Status code: ${response.statusCode}',
+          'Failed to connect to server. Status code: ${response.statusCode}',
         );
       }
     } catch (e) {
-      // Menangani error koneksi atau lainnya
       throw Exception(
-        'Gagal memuat data. Periksa koneksi internet Anda. Error: $e',
+        'Failed to load data. Check your internet connection. Error: $e',
       );
     }
+  }
+
+  // [TRANSLATED] Function to cancel the order with confirmation
+  Future<void> _cancelOrder(String orderId) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Cancellation'),
+        content: const Text('Are you sure you want to cancel this order? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes, Cancel'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://app.parkintime.web.id/flutter/cancel_booking.php'),
+        body: {'order_id': orderId},
+      );
+
+      if (!mounted) return;
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order successfully canceled.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        setState(() {
+          futureTicket = fetchTicket();
+        });
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to cancel order.');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred: ${e.toString().replaceFirst("Exception: ", "")}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _deleteTicket(String orderId) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Deleting ticket: $orderId')));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green,
+      backgroundColor: Color(0xFF629584),
       appBar: AppBar(
         toolbarHeight: 50,
         backgroundColor: Color(0xFF629584),
-        centerTitle: true, // ✅ Tengahin judul
+        centerTitle: true,
         title: Text(
           'View Ticket',
           style: TextStyle(
@@ -122,11 +177,7 @@ class _TicketPageState extends State<TicketPage> {
           ),
         ),
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_rounded,
-            color: Colors.white,
-            size: 20,
-          ), // ✅ Icon back lebih tebal
+          icon: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -134,12 +185,10 @@ class _TicketPageState extends State<TicketPage> {
         future: futureTicket,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            // Tampilkan loading indicator saat data sedang diambil
             return const Center(
               child: CircularProgressIndicator(color: Colors.white),
             );
           } else if (snapshot.hasError) {
-            // Tampilkan pesan error jika terjadi masalah
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -151,14 +200,13 @@ class _TicketPageState extends State<TicketPage> {
               ),
             );
           } else if (snapshot.hasData) {
-            // Jika data berhasil didapat, tampilkan UI tiket
             final ticket = snapshot.data!;
             return buildTicketBody(context, ticket);
           }
-          // State default
+          // [TRANSLATED]
           return const Center(
             child: Text(
-              'Tidak ada data tiket.',
+              'No ticket data available.',
               style: TextStyle(color: Colors.white),
             ),
           );
@@ -167,7 +215,6 @@ class _TicketPageState extends State<TicketPage> {
     );
   }
 
-  // Widget untuk membangun tampilan utama setelah data didapat
   Widget buildTicketBody(BuildContext context, Ticket ticket) {
     return Container(
       width: double.infinity,
@@ -196,12 +243,11 @@ class _TicketPageState extends State<TicketPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Status Tiket & Order ID
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      ticket.orderId, // <-- DIUBAH
+                      ticket.orderId,
                       style: const TextStyle(
                         color: Colors.grey,
                         fontWeight: FontWeight.bold,
@@ -211,27 +257,26 @@ class _TicketPageState extends State<TicketPage> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                // Nomor Plat & Jenis Kendaraan
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    buildHeaderInfo('Nomor Plat:', ticket.nomorPlat),
+                    // [TRANSLATED]
+                    buildHeaderInfo('Plate Number:', ticket.nomorPlat),
                     buildHeaderInfo(
-                      'Jenis Kendaraan',
+                      'Vehicle Type',
                       ticket.jenisKendaraan,
                       isRight: true,
                     ),
                   ],
                 ),
                 const Divider(height: 30),
-                // Informasi Parkir
+                // [TRANSLATED]
                 buildInfoRow('Parking Area:', ticket.parkingArea),
                 buildInfoRow('Address:', ticket.address),
                 buildInfoRow('Vehicle:', ticket.vehicle),
                 buildInfoRow('Parking Spot:', ticket.parkingSpot),
-                buildInfoRow('Waktu Masuk:', ticket.waktuMasuk),
+                buildInfoRow('Check-in Time:', ticket.waktuMasuk),
                 const SizedBox(height: 20),
-                // QR Code
                 Center(
                   child: QrImageView(
                     data: ticket.qrData,
@@ -242,48 +287,101 @@ class _TicketPageState extends State<TicketPage> {
                 ),
                 const SizedBox(height: 20),
                 const Divider(),
-                // Tarif
-                buildInfoRow('Tarif per jam:', ticket.tarifPerJam),
+                // [TRANSLATED]
+                buildInfoRow('Price per Hour:', ticket.tarifPerJam),
                 buildInfoRow('Total:', ticket.total),
                 const SizedBox(height: 20),
-                // Status Pembayaran
                 buildPaymentStatus(ticket.statusPembayaran),
                 const SizedBox(height: 20),
               ],
             ),
           ),
           const SizedBox(height: 20),
-          // Tombol Simpan Ticket
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () {
-                // Aksi Simpan Ticket (misalnya screenshot atau simpan ke galeri)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Fitur ini belum diimplementasikan.'),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Simpan Ticket',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-            ),
-          ),
+          _buildActionButtons(context, ticket),
         ],
       ),
     );
   }
 
-  // Helper widget untuk info di header
+  // [TRANSLATED] Widget to build conditional action buttons
+  Widget _buildActionButtons(BuildContext context, Ticket ticket) {
+    switch (ticket.status) {
+      case 'pending':
+        return Column(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (ticket.redirectUrl != null && ticket.redirectUrl!.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentWebViewPage(
+                          paymentUrl: ticket.redirectUrl!,
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Payment URL not found. Cannot proceed.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Continue to Payment',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: TextButton(
+                onPressed: () => _cancelOrder(ticket.orderId),
+                child: const Text(
+                  'Cancel Order',
+                  style: TextStyle(fontSize: 16, color: Colors.red),
+                ),
+              ),
+            ),
+          ],
+        );
+      case 'canceled':
+        return SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () => _deleteTicket(ticket.orderId),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Delete Ticket',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+        );
+      default:
+        return SizedBox.shrink(); // Hides button for other statuses
+    }
+  }
+
+  // --- WIDGET HELPER (TRANSLATED) ---
   Widget buildHeaderInfo(String label, String value, {bool isRight = false}) {
     return Column(
       crossAxisAlignment:
@@ -299,7 +397,6 @@ class _TicketPageState extends State<TicketPage> {
     );
   }
 
-  // Helper widget untuk baris info
   Widget buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -321,33 +418,25 @@ class _TicketPageState extends State<TicketPage> {
     );
   }
 
-  // Helper widget untuk status tiket
   Widget buildTicketStatusBadge(String status) {
     Color badgeColor;
-    String displayText;
-
-    switch (status.toLowerCase()) {
+    String displayText = status[0].toUpperCase() + status.substring(1); // Capitalize
+    switch (status) {
       case 'valid':
         badgeColor = Colors.blue;
-        displayText = 'Valid';
         break;
       case 'completed':
         badgeColor = Colors.green;
-        displayText = 'Completed';
         break;
       case 'canceled':
         badgeColor = Colors.red;
-        displayText = 'Canceled';
         break;
       case 'pending':
         badgeColor = Colors.orange;
-        displayText = 'Pending';
         break;
       default:
         badgeColor = Colors.grey;
-        displayText = status;
     }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -365,28 +454,31 @@ class _TicketPageState extends State<TicketPage> {
     );
   }
 
-  // Helper widget untuk status pembayaran
   Widget buildPaymentStatus(String status) {
+    // Assuming 'lunas' from backend means 'Paid'
     bool isPaid = status.toLowerCase() == 'lunas';
+    String displayStatus = isPaid ? 'Paid' : 'Pending';
+    Color statusColor = isPaid ? Colors.green : Colors.orange;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: isPaid ? Colors.green[50] : Colors.orange[50],
+        color: statusColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isPaid ? Colors.green : Colors.orange),
+        border: Border.all(color: statusColor),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             isPaid ? Icons.check_circle : Icons.error,
-            color: isPaid ? Colors.green : Colors.orange,
+            color: statusColor,
           ),
           const SizedBox(width: 10),
           Text(
-            'Status Pembayaran: $status',
+            'Payment Status: $displayStatus',
             style: TextStyle(
-              color: isPaid ? Colors.green : Colors.orange,
+              color: statusColor,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -91,11 +91,13 @@ class ViewDetailCarPage extends StatelessWidget {
                 backgroundColor: Colors.red,
                 minimumSize: const Size(double.infinity, 50),
               ),
-              child: const Text("Remove Car",style: const TextStyle(
-            
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),),
+              child: const Text(
+                "Remove Car",
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ],
         ),

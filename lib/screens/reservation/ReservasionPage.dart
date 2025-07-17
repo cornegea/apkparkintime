@@ -34,28 +34,30 @@ class _ReservasionpageState extends State<Reservasionpage> {
       if (body['success']) {
         final List<dynamic> data = body['data'];
         final processed =
-            data.map((e) {
-              int kapasitas = int.tryParse(e['kapasitas'].toString()) ?? 0;
-              int terisi = int.tryParse(e['terisi'].toString()) ?? 0;
-              String status = "Tersedia";
-              double persen = terisi / kapasitas;
+    data.map((e) {
+      int kapasitas = int.tryParse(e['kapasitas'].toString()) ?? 0;
+      int terisi = int.tryParse(e['terisi'].toString()) ?? 0;
+      int tersedia = kapasitas - terisi; // <-- TAMBAHKAN BARIS INI
 
-              if (persen >= 1.0) {
-                status = "Penuh";
-              } else if (persen >= 0.9) {
-                status = "Hampir Penuh";
-              }
+      String status = "Available";
+      double persen = terisi / kapasitas;
 
-              return {
-                "id": e['id'],
-                "name": e['nama_lokasi'],
-                "address": e['alamat'],
-                "price": "Rp ${e['tarif_per_jam']}",
-                "capacity": "$terisi/$kapasitas",
-                "status": status,
-                "foto": e['foto'],
-              };
-            }).toList();
+      if (persen >= 1.0) {
+        status = "Full";
+      } else if (persen >= 0.9) {
+        status = "Almost Full";
+      }
+
+      return {
+        "id": e['id'],
+        "name": e['nama_lokasi'],
+        "address": e['alamat'],
+        "price": "Rp ${e['tarif_per_jam']}",
+        "capacity": "$tersedia/$kapasitas", // <-- UBAH BARIS INI
+        "status": status,
+        "foto": e['foto'],
+      };
+    }).toList();
 
         setState(() {
           allParkingData = processed;
@@ -88,11 +90,11 @@ class _ReservasionpageState extends State<Reservasionpage> {
 
   Color _statusColor(String status) {
     switch (status) {
-      case "Tersedia":
+      case "Available":
         return Colors.green.shade100;
-      case "Hampir Penuh":
+      case "Almost Full":
         return Colors.orange.shade100;
-      case "Penuh":
+      case "Full":
         return Colors.red.shade100;
       default:
         return Colors.grey.shade200;
@@ -101,11 +103,11 @@ class _ReservasionpageState extends State<Reservasionpage> {
 
   Color _statusTextColor(String status) {
     switch (status) {
-      case "Tersedia":
+      case "Available":
         return Colors.green;
-      case "Hampir Penuh":
+      case "Almost Full":
         return Colors.orange;
-      case "Penuh":
+      case "Full":
         return Colors.red;
       default:
         return Colors.grey;

@@ -269,7 +269,7 @@ class _SelectVehiclePageState extends State<SelectVehiclePage> {
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: canContinue ? Colors.green : Colors.grey,
+                  backgroundColor: canContinue ? Color(0xFF629584) : Colors.grey,
                   minimumSize: Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
