@@ -192,12 +192,7 @@ class _HomePageContentState extends State<HomePageContent> {
     return Container(
       width: double.infinity,
       color: Color(0xFF629584),
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        20,
-        25,
-        100,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 20, 25, 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -322,11 +317,7 @@ class _HomePageContentState extends State<HomePageContent> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4),
-                  Container(
-                    height: 2,
-                    width: 40,
-                    color: Color(0xFF2ECC40),
-                  ),
+                  Container(height: 2, width: 40, color: Color(0xFF2ECC40)),
                 ],
               ),
               TextButton(
@@ -343,17 +334,19 @@ class _HomePageContentState extends State<HomePageContent> {
                   foregroundColor: const Color.fromARGB(255, 236, 63, 43),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
-                    side: const BorderSide(color: Color.fromARGB(255, 240, 101, 82)),
+                    side: const BorderSide(
+                      color: Color.fromARGB(255, 240, 101, 82),
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   visualDensity: VisualDensity.compact,
                 ),
                 child: const Text(
                   "Manage Vehicle",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -362,139 +355,150 @@ class _HomePageContentState extends State<HomePageContent> {
         const SizedBox(height: 15),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: vehicles.isEmpty
-              ? Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 6,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      children: [
-                        Image.asset(
-                          'assets/car.png',
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(width: 12),
-                        const VerticalDivider(
-                          color: Colors.black26,
-                          thickness: 1,
-                          indent: 10,
-                          endIndent: 10,
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Text(
-                            "No cars added yet",
-                            style: TextStyle(fontSize: 16, color: Colors.black54),
-                          ),
+          child:
+              vehicles.isEmpty
+                  ? Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 6,
+                          offset: Offset(0, 3),
                         ),
                       ],
                     ),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            'assets/car.png',
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(width: 12),
+                          const VerticalDivider(
+                            color: Colors.black26,
+                            thickness: 1,
+                            indent: 10,
+                            endIndent: 10,
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              "No cars added yet",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  : SizedBox(
+                    height: 100,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: vehicles.length,
+                      separatorBuilder: (_, __) => SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        final vehicle = vehicles[index];
+                        return VehicleCard(
+                          plate: vehicle['no_kendaraan'] ?? '-',
+                          brand: vehicle['merek'] ?? '-',
+                          type: vehicle['tipe'] ?? '-',
+                          color: vehicle['warna'] ?? '-',
+                        );
+                      },
+                    ),
                   ),
-                )
-              : SizedBox(
-                  height: 100,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: vehicles.length,
-                    separatorBuilder: (_, __) => SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      final vehicle = vehicles[index];
-                      return VehicleCard(
-                        plate: vehicle['no_kendaraan'] ?? '-',
-                        brand: vehicle['merek'] ?? '-',
-                        type: vehicle['tipe'] ?? '-',
-                        color: vehicle['warna'] ?? '-',
-                      );
-                    },
-                  ),
-                ),
         ),
       ],
     );
   }
 
   Widget _buildParkingSpotSection() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Parking Spot",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 4),
-            Container(
-              height: 2,
-              width: 40,
-              color: Color(0xFF2ECC40),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Parking Spot",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Container(height: 2, width: 40, color: Color(0xFF2ECC40)),
+            ],
+          ),
         ),
-      ),
-      const SizedBox(height: 15),
-      Container(
-        height: 180,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: parkingLots.length,
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          itemBuilder: (context, index) {
-            final lot = parkingLots[index];
+        const SizedBox(height: 15),
+        Container(
+          height: 180,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: parkingLots.length,
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            itemBuilder: (context, index) {
+              final lot = parkingLots[index];
 
-            // --- PERUBAHAN DIMULAI DI SINI ---
+              // --- PERUBAHAN DIMULAI DI SINI ---
 
-            // 1. Ambil data 'kapasitas' dan 'terisi' dari API
-            final int kapasitas = lot['kapasitas'] ?? 0;
-            final int terisi = lot['terisi'] ?? 0;
-            
-            // 2. Hitung jumlah slot yang tersedia
-            final int tersedia = kapasitas - terisi;
+              // 1. Ambil data 'kapasitas' dan 'terisi' dari API
+              final int kapasitas = lot['kapasitas'] ?? 0;
+              final int terisi = lot['terisi'] ?? 0;
 
-            // --- AKHIR PERUBAHAN ---
-            
-            final String lahanId = lot['id']?.toString() ?? '';
+              // 2. Hitung jumlah slot yang tersedia
+              final int tersedia = kapasitas - terisi;
 
-            // 3. Gunakan variabel 'tersedia' yang sudah dihitung
-            return _buildParkingCard(
-              lahanId,
-              lot['nama_lokasi'] ?? 'Unknown',
-              lot['foto'] ?? '',
-              tersedia,
-            );
-          },
+              // --- AKHIR PERUBAHAN ---
+
+              final String lahanId = lot['id']?.toString() ?? '';
+
+              // 3. Gunakan variabel 'tersedia' yang sudah dihitung
+              return _buildParkingCard(
+                lahanId,
+                lot['nama_lokasi'] ?? 'Unknown',
+                lot['foto'] ?? '',
+                tersedia,
+              );
+            },
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
+
   // --- LANGKAH 2 (Lanjutan): Update signature dan bungkus dengan GestureDetector ---
-  Widget _buildParkingCard(String id, String title, String foto, int availableSlots) {
-    return GestureDetector( // <-- LANGKAH 3: Bungkus dengan GestureDetector
+  Widget _buildParkingCard(
+    String id,
+    String title,
+    String foto,
+    int availableSlots,
+  ) {
+    return GestureDetector(
+      // <-- LANGKAH 3: Bungkus dengan GestureDetector
       onTap: () {
         // --- LANGKAH 4: Lakukan Navigasi ---
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ParkingLotDetailPage(
-              id_lahan: id, // Kirim ID yang sudah diterima
-            ),
+            builder:
+                (context) => ParkingLotDetailPage(
+                  id_lahan: id, // Kirim ID yang sudah diterima
+                ),
           ),
         );
       },
@@ -523,12 +527,16 @@ class _HomePageContentState extends State<HomePageContent> {
                   top: Radius.circular(12),
                 ),
                 child: Image(
-                  image: (foto.isNotEmpty)
-                      ? NetworkImage('https://app.parkintime.web.id/foto/$foto')
-                      : AssetImage("assets/spot.png") as ImageProvider,
+                  image:
+                      (foto.isNotEmpty)
+                          ? NetworkImage(
+                            'https://app.parkintime.web.id/foto/$foto',
+                          )
+                          : AssetImage("assets/spot.png") as ImageProvider,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Icon(Icons.business, size: 40, color: Colors.grey),
+                  errorBuilder:
+                      (context, error, stackTrace) =>
+                          Icon(Icons.business, size: 40, color: Colors.grey),
                 ),
               ),
             ),
@@ -561,7 +569,10 @@ class _HomePageContentState extends State<HomePageContent> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: availableSlots > 0 ? Colors.green.shade600 : Colors.red,
+                            color:
+                                availableSlots > 0
+                                    ? Colors.green.shade600
+                                    : Colors.red,
                           ),
                         ),
                       ],

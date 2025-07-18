@@ -5,12 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:parkintime/screens/ticket_page.dart';
 
-// [NEW] Widget for the empty state view
+// EmptyHistoryWidget (Tidak ada perubahan)
 class EmptyHistoryWidget extends StatelessWidget {
   final VoidCallback onRefresh;
-
   const EmptyHistoryWidget({Key? key, required this.onRefresh}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -26,42 +24,21 @@ class EmptyHistoryWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.history_toggle_off,
-                      size: 80,
-                      color: Colors.grey[400],
-                    ),
+                    Icon(Icons.history_toggle_off, size: 80, color: Colors.grey[400]),
                     const SizedBox(height: 24),
-                    Text(
-                      "History is Empty",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                    ),
+                    Text("History is Empty", textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey[800])),
                     const SizedBox(height: 8),
-                    Text(
-                      "All parking tickets you have used or canceled will appear here.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.grey[600],
-                      ),
-                    ),
+                    Text("All parking tickets you have used or canceled will appear here.", textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: Colors.grey[600])),
                     const SizedBox(height: 32),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.refresh),
                       label: const Text("Try Again"),
                       onPressed: onRefresh,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF629584), // Correct parameter
+                        backgroundColor: const Color(0xFF629584),
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         textStyle: const TextStyle(fontSize: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     )
                   ],
@@ -75,41 +52,31 @@ class EmptyHistoryWidget extends StatelessWidget {
   }
 }
 
-// [NEW] Widget to display each history item as a card
+// HistoryItemCard dengan tombol hapus di atas status
 class HistoryItemCard extends StatelessWidget {
   final HistoryItem item;
+  final VoidCallback? onDelete;
 
-  const HistoryItemCard({Key? key, required this.item}) : super(key: key);
+  const HistoryItemCard({Key? key, required this.item, this.onDelete}) : super(key: key);
 
-  // Helper to get an icon based on parking type
   IconData _getIconForType(String type) {
     switch (type.toLowerCase()) {
-      case 'car': // Changed from 'mobil'
-        return Icons.directions_car;
-      case 'motorcycle': // Changed from 'motor'
-        return Icons.two_wheeler;
-      default:
-        return Icons.receipt_long;
+      case 'car': return Icons.directions_car;
+      case 'motorcycle': return Icons.two_wheeler;
+      default: return Icons.receipt_long;
     }
   }
 
-  // Helper to get the status color
   Color _getColorForStatus(String status) {
     switch (status.toLowerCase()) {
-      case 'completed':
-        return Colors.green;
-      case 'canceled':
-        return Colors.red;
-      case 'valid':
-        return Colors.blue;
-      case 'pending':
-        return Colors.orange;
-      default:
-        return Colors.grey;
+      case 'completed': return Colors.green;
+      case 'canceled': return const Color.fromARGB(255, 230, 112, 104);
+      case 'valid': return Colors.blue;
+      case 'pending': return Colors.orange;
+      default: return Colors.grey;
     }
   }
 
-  // Helper to format the status text (e.g., "completed" -> "Completed")
   String _formatStatusText(String status) {
     if (status.isEmpty) return "Unknown";
     return status[0].toUpperCase() + status.substring(1);
@@ -125,9 +92,8 @@ class HistoryItemCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(15),
         onTap: () {
-          // Navigation when the card is tapped
           if (item.status.toLowerCase() != 'canceled') {
-             Navigator.push(
+            Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => TicketPage(ticketId: item.ticketId),
@@ -140,60 +106,52 @@ class HistoryItemCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 1. Vehicle Type Icon
               CircleAvatar(
                 radius: 24,
                 backgroundColor: const Color(0xFF629584).withOpacity(0.1),
-                child: Icon(
-                  _getIconForType(item.jenis),
-                  size: 28,
-                  color: const Color(0xFF629584),
-                ),
+                child: Icon(_getIconForType(item.jenis), size: 28, color: const Color(0xFF629584)),
               ),
               const SizedBox(width: 16),
-              // 2. Detailed Information
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      item.namaLokasi,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(item.namaLokasi, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
-                    Text(
-                      "ID: ${item.orderId ?? 'N/A'} • Slot: ${item.kodeSlot}",
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                    ),
+                    Text("ID: ${item.orderId ?? 'N/A'} • Slot: ${item.kodeSlot}", style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                     const SizedBox(height: 4),
-                    Text(
-                      DateFormat('d MMMM y, HH:mm').format(item.waktuMasuk),
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                    ),
+                    Text(DateFormat('d MMMM y, HH:mm').format(item.waktuMasuk), style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              // 3. Status Tag
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: _getColorForStatus(item.status).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _formatStatusText(item.status),
-                  style: TextStyle(
-                    color: _getColorForStatus(item.status),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (onDelete != null)
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.delete, color: Color.fromARGB(255, 104, 103, 103), size: 22),
+                        onPressed: onDelete,
+                        tooltip: 'Delete History',
+                      ),
+                    ),
+                  if (onDelete != null) const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _getColorForStatus(item.status).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _formatStatusText(item.status),
+                      style: TextStyle(color: _getColorForStatus(item.status), fontWeight: FontWeight.w600, fontSize: 12),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -203,9 +161,6 @@ class HistoryItemCard extends StatelessWidget {
   }
 }
 
-// =========================================================================
-// MAIN SCREEN CLASS
-// =========================================================================
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
 
@@ -215,6 +170,7 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   int _selectedIndex = 0;
+  late PageController _pageController;
   int? _idAkun;
   final List<String> filters = ["Valid", "Completed", "Canceled"];
   List<HistoryItem> _historyItems = [];
@@ -223,59 +179,121 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _loadIdAkun();
+    _pageController = PageController();
+    _loadInitialData();
   }
 
-  Future<void> _loadIdAkun() async {
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _idAkun = prefs.getInt('id_akun');
-    });
+    _idAkun = prefs.getInt('id_akun');
     if (_idAkun != null) {
       await fetchHistory();
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
+    }
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
 
   Future<void> fetchHistory() async {
-    if (_idAkun == null) return;
-    if(!mounted) return;
-    setState(() {
-      _isLoading = true;
-    });
-
+    if (_idAkun == null || !mounted) return;
     try {
       final response = await http.post(
         Uri.parse("https://app.parkintime.web.id/flutter/riwayat.php"),
         body: {"id_akun": _idAkun.toString()},
+      );
+      if (response.statusCode == 200 && mounted) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          setState(() {
+            _historyItems = (data['data'] as List).map((item) => HistoryItem.fromJson(item)).toList();
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        // [PERUBAHAN] Posisi SnackBar diubah
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to load history. Check your connection.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(15, 5, 15, 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteHistoryItem(int ticketId) async {
+    if (_idAkun == null) return;
+
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Deletion'),
+        content: const Text('Are you sure you want to delete this history item?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('No')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes, Delete'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final response = await http.post(
+        Uri.parse("https://app.parkintime.web.id/flutter/delete_history_item.php"),
+        body: {
+          "id_akun": _idAkun.toString(),
+          "ticket_id": ticketId.toString(),
+        },
       );
 
       if (response.statusCode == 200 && mounted) {
         final data = jsonDecode(response.body);
         if (data['success']) {
           setState(() {
-            _historyItems =
-                (data['data'] as List)
-                    .map((item) => HistoryItem.fromJson(item))
-                    .toList();
+            _historyItems.removeWhere((item) => item.ticketId == ticketId);
           });
+          // [PERUBAHAN] Posisi SnackBar diubah
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('History item deleted.'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(15, 5, 15, 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        } else {
+          throw Exception(data['message'] ?? 'Failed to delete item.');
         }
       }
     } catch (e) {
-      print(e);
-      if(mounted) {
+      if (mounted) {
+        // [PERUBAHAN] Posisi SnackBar diubah
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load history. Check your connection.'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: ${e.toString().replaceFirst("Exception: ", "")}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(15, 5, 15, 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
         );
-      }
-    } finally {
-      if(mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -283,22 +301,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 225, 223, 223),
-      // [CHANGED] Using a more standard AppBar
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
+        
         backgroundColor: const Color(0xFF629584),
         elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [
           _buildFilterChips(),
-          Expanded(child: _buildContentForTab()),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF629584)))
+                : PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                    },
+                    children: filters.map((filter) {
+                      return _buildContentForTab(filter);
+                    }).toList(),
+                  ),
+          ),
         ],
       ),
     );
   }
-  
-  // [CHANGED] Filter widget extracted for cleaner code
+
   Widget _buildFilterChips() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -312,9 +344,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
             selected: isSelected,
             onSelected: (bool selected) {
               if (selected) {
-                setState(() {
-                  _selectedIndex = index;
-                });
+                _pageController.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
               }
             },
             backgroundColor: Colors.white,
@@ -324,9 +358,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               fontWeight: FontWeight.w600,
             ),
             shape: StadiumBorder(
-              side: BorderSide(
-                color: isSelected ? const Color(0xFF629584) : Colors.grey.shade400,
-              )
+              side: BorderSide(color: isSelected ? const Color(0xFF629584) : Colors.grey.shade400)
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           );
@@ -335,45 +367,40 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildContentForTab() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF629584)));
-    }
+  Widget _buildContentForTab(String filter) {
+    final String selectedFilter = filter.toLowerCase();
+    final filteredItems = _historyItems.where((item) {
+      String itemStatus = item.status.toLowerCase();
+      if (selectedFilter == "valid") {
+        return itemStatus == "valid" || itemStatus == "pending";
+      }
+      return itemStatus == selectedFilter;
+    }).toList();
 
-    String selectedFilter = filters[_selectedIndex].toLowerCase();
-    final filteredItems =
-        _historyItems.where((item) {
-          String itemStatus = item.status.toLowerCase();
-          // Filter logic: "Valid" includes both "valid" and "pending"
-          if (selectedFilter == "valid") {
-            return itemStatus == "valid" || itemStatus == "pending";
-          }
-          return itemStatus == selectedFilter;
-        }).toList();
-        
-    // [CHANGED] Using the new EmptyHistoryWidget when data is empty
-    if (filteredItems.isEmpty) {
-      return EmptyHistoryWidget(onRefresh: fetchHistory);
-    }
-    
-    // [CHANGED] Using the new HistoryItemCard to display data
     return RefreshIndicator(
       onRefresh: fetchHistory,
       color: const Color(0xFF629584),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: filteredItems.length,
-        itemBuilder: (context, index) {
-          final item = filteredItems[index];
-          // Using the new card widget
-          return HistoryItemCard(item: item);
-        },
-      ),
+      child: filteredItems.isEmpty
+          ? EmptyHistoryWidget(onRefresh: fetchHistory)
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: filteredItems.length,
+              itemBuilder: (context, index) {
+                final item = filteredItems[index];
+                bool canBeDeleted = selectedFilter == 'canceled';
+
+                return HistoryItemCard(
+                  item: item,
+                  onDelete: canBeDeleted ? () => _deleteHistoryItem(item.ticketId) : null,
+                );
+              },
+            ),
     );
   }
 }
 
-// HistoryItem Model Class (with improved null-safety checks)
+// HistoryItem Model Class (Tidak ada perubahan)
 class HistoryItem {
   final int ticketId;
   final String? orderId;
@@ -386,15 +413,9 @@ class HistoryItem {
   final String jenis;
 
   HistoryItem({
-    required this.ticketId,
-    this.orderId,
-    required this.status,
-    required this.waktuMasuk,
-    this.waktuKeluar,
-    required this.biayaTotal,
-    required this.kodeSlot,
-    required this.namaLokasi,
-    required this.jenis,
+    required this.ticketId, this.orderId, required this.status,
+    required this.waktuMasuk, this.waktuKeluar, required this.biayaTotal,
+    required this.kodeSlot, required this.namaLokasi, required this.jenis,
   });
 
   factory HistoryItem.fromJson(Map<String, dynamic> json) {
@@ -403,10 +424,8 @@ class HistoryItem {
       orderId: json['order_id'],
       status: json['status'] ?? 'Unknown',
       waktuMasuk: DateTime.parse(json['waktu_masuk'] ?? DateTime.now().toIso8601String()),
-      waktuKeluar:
-          json['waktu_keluar'] != null && json['waktu_keluar'].toString().isNotEmpty
-              ? DateTime.tryParse(json['waktu_keluar'])
-              : null,
+      waktuKeluar: json['waktu_keluar'] != null && json['waktu_keluar'].toString().isNotEmpty
+          ? DateTime.tryParse(json['waktu_keluar']) : null,
       biayaTotal: int.tryParse(json['biaya_total']?.toString() ?? '0') ?? 0,
       kodeSlot: json['kode_slot'] ?? 'N/A',
       namaLokasi: json['nama_lokasi'] ?? 'Location Not Found',

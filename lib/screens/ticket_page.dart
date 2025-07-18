@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:parkintime/screens/payment_webview_page.dart'; // Make sure this import is correct
+import 'package:parkintime/screens/payment_webview_page.dart'; // Pastikan path import ini benar
 
-// Model Ticket (no changes needed here)
+// Model Ticket (tidak ada perubahan)
 class Ticket {
   final String orderId;
   final String status;
@@ -76,6 +76,7 @@ class _TicketPageState extends State<TicketPage> {
     futureTicket = fetchTicket();
   }
 
+  // --- FUNGSI LOGIKA (TIDAK ADA PERUBAHAN) ---
   Future<Ticket> fetchTicket() async {
     final apiUrl =
         'https://app.parkintime.web.id/flutter/tiket.php?id=${widget.ticketId}';
@@ -99,8 +100,7 @@ class _TicketPageState extends State<TicketPage> {
       );
     }
   }
-
-  // [TRANSLATED] Function to cancel the order with confirmation
+  
   Future<void> _cancelOrder(String orderId) async {
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -157,8 +157,12 @@ class _TicketPageState extends State<TicketPage> {
   }
 
   void _deleteTicket(String orderId) {
+    // Implementasikan logika hapus tiket yang sesungguhnya di sini
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Deleting ticket: $orderId')));
+    Navigator.of(context).pop(true); // Kembali dan tandai ada perubahan
   }
+
+  // --- UI WIDGETS (PERBAIKAN DI SINI) ---
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +184,7 @@ class _TicketPageState extends State<TicketPage> {
           icon: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        elevation: 0,
       ),
       body: FutureBuilder<Ticket>(
         future: futureTicket,
@@ -203,7 +208,6 @@ class _TicketPageState extends State<TicketPage> {
             final ticket = snapshot.data!;
             return buildTicketBody(context, ticket);
           }
-          // [TRANSLATED]
           return const Center(
             child: Text(
               'No ticket data available.',
@@ -215,99 +219,130 @@ class _TicketPageState extends State<TicketPage> {
     );
   }
 
+  // --- PERBAIKAN UTAMA PADA STRUKTUR LAYOUT ---
   Widget buildTicketBody(BuildContext context, Ticket ticket) {
     return Container(
       width: double.infinity,
       height: double.infinity,
       decoration: const BoxDecoration(
-        color: Color(0xFFF5F5F5),
+        color: Color(0xFFF5F5F5), // Warna background untuk konten
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: ListView(
-        padding: const EdgeInsets.all(20),
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      ticket.orderId,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    buildTicketStatusBadge(ticket.status),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // [TRANSLATED]
-                    buildHeaderInfo('Plate Number:', ticket.nomorPlat),
-                    buildHeaderInfo(
-                      'Vehicle Type',
-                      ticket.jenisKendaraan,
-                      isRight: true,
-                    ),
-                  ],
-                ),
-                const Divider(height: 30),
-                // [TRANSLATED]
-                buildInfoRow('Parking Area:', ticket.parkingArea),
-                buildInfoRow('Address:', ticket.address),
-                buildInfoRow('Vehicle:', ticket.vehicle),
-                buildInfoRow('Parking Spot:', ticket.parkingSpot),
-                buildInfoRow('Check-in Time:', ticket.waktuMasuk),
-                const SizedBox(height: 20),
-                Center(
-                  child: QrImageView(
-                    data: ticket.qrData,
-                    version: QrVersions.auto,
-                    size: 150.0,
-                    gapless: false,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Divider(),
-                // [TRANSLATED]
-                buildInfoRow('Price per Hour:', ticket.tarifPerJam),
-                buildInfoRow('Total:', ticket.total),
-                const SizedBox(height: 20),
-                buildPaymentStatus(ticket.statusPembayaran),
-                const SizedBox(height: 20),
-              ],
+          // Konten yang bisa di-scroll
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: _buildTicketDetailsCard(ticket),
             ),
           ),
-          const SizedBox(height: 20),
-          _buildActionButtons(context, ticket),
+          // Tombol aksi yang menempel di bawah
+          _buildBottomActionBar(context, ticket),
         ],
       ),
     );
   }
 
-  // [TRANSLATED] Widget to build conditional action buttons
+  // Widget baru untuk kartu detail tiket
+  Widget _buildTicketDetailsCard(Ticket ticket) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                ticket.orderId,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              buildTicketStatusBadge(ticket.status),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              buildHeaderInfo('Plate Number:', ticket.nomorPlat),
+              buildHeaderInfo(
+                'Vehicle Type',
+                ticket.jenisKendaraan,
+                isRight: true,
+              ),
+            ],
+          ),
+          const Divider(height: 30),
+          buildInfoRow('Parking Area:', ticket.parkingArea),
+          buildInfoRow('Address:', ticket.address),
+          buildInfoRow('Vehicle:', ticket.vehicle),
+          buildInfoRow('Parking Spot:', ticket.parkingSpot),
+          buildInfoRow('Check-in Time:', ticket.waktuMasuk),
+          const SizedBox(height: 20),
+          Center(
+            child: QrImageView(
+              data: ticket.qrData,
+              version: QrVersions.auto,
+              size: 150.0,
+              gapless: false,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Divider(),
+          buildInfoRow('Price per Hour:', ticket.tarifPerJam),
+          buildInfoRow('Total:', ticket.total),
+          const SizedBox(height: 20),
+          buildPaymentStatus(ticket.statusPembayaran),
+        ],
+      ),
+    );
+  }
+
+  // Widget baru untuk action bar bawah yang aman dari potongan
+  Widget _buildBottomActionBar(BuildContext context, Ticket ticket) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, -5),
+          )
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: _buildActionButtons(context, ticket),
+        ),
+      ),
+    );
+  }
+
+  // Widget untuk tombol aksi (logika tidak berubah)
   Widget _buildActionButtons(BuildContext context, Ticket ticket) {
     switch (ticket.status) {
       case 'pending':
         return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
               width: double.infinity,
@@ -333,14 +368,14 @@ class _TicketPageState extends State<TicketPage> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Color(0xFF629584),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: const Text(
                   'Continue to Payment',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
+                  style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -367,21 +402,21 @@ class _TicketPageState extends State<TicketPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: const Text(
               'Delete Ticket',
-              style: TextStyle(fontSize: 16, color: Colors.white),
+              style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         );
       default:
-        return SizedBox.shrink(); // Hides button for other statuses
+        return SizedBox.shrink(); 
     }
   }
 
-  // --- WIDGET HELPER (TRANSLATED) ---
+  // --- WIDGET HELPER (TIDAK ADA PERUBAHAN) ---
   Widget buildHeaderInfo(String label, String value, {bool isRight = false}) {
     return Column(
       crossAxisAlignment:
@@ -420,7 +455,7 @@ class _TicketPageState extends State<TicketPage> {
 
   Widget buildTicketStatusBadge(String status) {
     Color badgeColor;
-    String displayText = status[0].toUpperCase() + status.substring(1); // Capitalize
+    String displayText = status[0].toUpperCase() + status.substring(1);
     switch (status) {
       case 'valid':
         badgeColor = Colors.blue;
@@ -455,8 +490,7 @@ class _TicketPageState extends State<TicketPage> {
   }
 
   Widget buildPaymentStatus(String status) {
-    // Assuming 'lunas' from backend means 'Paid'
-    bool isPaid = status.toLowerCase() == 'lunas';
+    bool isPaid = status.toLowerCase() == 'settlement';
     String displayStatus = isPaid ? 'Paid' : 'Pending';
     Color statusColor = isPaid ? Colors.green : Colors.orange;
 

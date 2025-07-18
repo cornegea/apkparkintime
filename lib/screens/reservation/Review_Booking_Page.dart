@@ -50,7 +50,7 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
     _fetchPageDetails();
   }
 
-  // --- LOGIC FUNCTIONS (NO MAJOR CHANGES) ---
+  // --- LOGIC FUNCTIONS (NO CHANGES) ---
   Future<void> _fetchPageDetails() async {
     setState(() {
       _isLoading = true;
@@ -63,7 +63,6 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
         throw Exception("User not logged in.");
       }
 
-      // Fetching data in parallel
       await Future.wait([
         _fetchLahanDetails(),
         _fetchVehicleDetails(),
@@ -120,7 +119,7 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
     }
   }
 
-   Future<void> _createBookingAndPay() async {
+  Future<void> _createBookingAndPay() async {
     if (_idAkun == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('User not logged in.'), backgroundColor: Colors.red),
@@ -189,7 +188,7 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
 
     } catch (e) {
       String errorMessage = e.toString();
-       if (e is FormatException && response != null) {
+        if (e is FormatException && response != null) {
         errorMessage = "Failed to parse JSON. Server Response:\n${response.body}";
       } else if (e is FormatException) {
         errorMessage = "Failed to parse date/time. Input was: '${widget.date} ${widget.hours.split(' - ')[0]}'. Error: ${e.message}";
@@ -211,11 +210,12 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
     }
   }
 
+  // --- UI WIDGETS (PERBAIKAN DI SINI) ---
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Background color for contrast
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         toolbarHeight: 80,
         backgroundColor: Color(0xFF629584),
@@ -237,16 +237,17 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      // Struktur body tetap sama, karena sudah benar
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: Color(0xFF629584)))
           : Column(
               children: [
-                // --- SCROLLABLE CONTENT ---
+                // Konten yang bisa di-scroll
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0), // Hapus padding bawah
                     child: Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20), // Padding internal
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
@@ -262,14 +263,7 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Booking Details",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
+                          _buildSectionTitle("Booking Details"),
                           const SizedBox(height: 16),
                           buildDetailRow('Parking Area', parkingArea ?? 'Loading...'),
                           buildDetailRow('Address', address ?? 'Loading...'),
@@ -283,41 +277,34 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
                             padding: EdgeInsets.symmetric(vertical: 12.0),
                             child: Divider(),
                           ),
-                          Text(
-                            "Payment Details",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
+                          _buildSectionTitle("Payment Details"),
                           const SizedBox(height: 16),
                           buildDetailRow('Price per Hour', currencyFormatter.format(widget.pricePerHour)),
                           buildDetailRow('Duration', widget.duration),
                           const SizedBox(height: 8),
+                          const Divider(),
+                          const SizedBox(height: 8),
                           buildDetailRow(
                             'Total Payment',
                             currencyFormatter.format(widget.total_price),
-                            isTotal: true, // Flag for total style
+                            isTotal: true,
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                // --- BOTTOM ACTION BUTTON ---
+                // Tombol di bawah yang sudah diperbaiki
                 _buildPaymentButton(),
               ],
             ),
     );
   }
 
-  // New widget for the payment button to keep the build method clean
+  // --- PERBAIKAN UTAMA ADA DI SINI ---
   Widget _buildPaymentButton() {
+    // Container untuk memberikan background putih dan shadow
     return Container(
-      // Padding adjusted to raise the button
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16), 
-      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -327,36 +314,53 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
             offset: Offset(0, -5),
           ),
         ],
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
       ),
-      child: SizedBox(
-        height: 55,
-        child: ElevatedButton(
-          onPressed: _isCreatingOrder ? null : _createBookingAndPay,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF00695C), // A more solid green color
-            disabledBackgroundColor: Colors.green.shade200,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      // SafeArea akan memastikan isinya tidak tertutup UI sistem
+      child: SafeArea(
+        top: false, // Kita hanya butuh safe area untuk bagian bawah
+        child: Padding(
+          // Padding dipindahkan ke dalam SafeArea
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 55,
+            child: ElevatedButton(
+              onPressed: _isCreatingOrder ? null : _createBookingAndPay,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF629584),
+                disabledBackgroundColor: Colors.grey.shade400,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: _isCreatingOrder
+                  ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 3)
+                  : const Text(
+                      'Create Order & Continue',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
           ),
-          child: _isCreatingOrder
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text(
-                  'Create Order & Continue',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
         ),
       ),
     );
   }
 
-  // Helper widget for detail rows with updated style
+  // Helper widget untuk judul seksi
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  // Helper widget untuk baris detail
   Widget buildDetailRow(String title, String value, {bool isTotal = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -369,7 +373,6 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(width: 16),
@@ -378,9 +381,9 @@ class _ReviewBookingPageState extends State<ReviewBookingPage> {
               value,
               textAlign: TextAlign.end,
               style: TextStyle(
-                fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
                 fontSize: isTotal ? 18 : 15,
-                color: isTotal ? Color(0xFF00695C) : Colors.black87,
+                color: isTotal ? Color(0xFF629584) : Colors.black87,
               ),
             ),
           ),
