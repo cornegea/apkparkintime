@@ -600,7 +600,7 @@ class _HomePageContentState extends State<HomePageContent> {
                     children: [
                       // Menjadi kode ini:
                       Image.asset(
-                        'assets/maps.png', // Panggil gambar dari folder assets
+                        'assets/map.jpg', // Panggil gambar dari folder assets
                         width: 20, // Atur ukuran gambar dengan width dan height
                         height: 20,
                       ),
