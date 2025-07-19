@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:parkintime/screens/history/historyscreen.dart';
 import 'package:parkintime/screens/profil/profilescreen.dart';
+import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart'; // Import package
 import 'home_page_content.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,11 +18,19 @@ class _HomeScreenState extends State<HomeScreen> {
     ProfileScreen(),
   ];
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  // List ikon untuk navigation bar baru
+  final iconList = <IconData>[
+    Icons.home_filled,
+    Icons.history,
+    Icons.person,
+  ];
+  
+  // List label
+  final labelList = <String>[
+    "Home",
+    "History",
+    "Profile",
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -30,43 +39,42 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: IndexedStack(index: _selectedIndex, children: _pages),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 10,
-              offset: Offset(0, -1),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.white,
-          selectedItemColor: Color(0xFF629584), // hijau branding
-          unselectedItemColor: Colors.black54,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.history_outlined),
-              activeIcon: Icon(Icons.history),
-              label: 'History',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
+      // GANTI WIDGET BottomNavigationBar DENGAN INI
+      bottomNavigationBar: AnimatedBottomNavigationBar.builder(
+        itemCount: iconList.length,
+        tabBuilder: (int index, bool isActive) {
+          final color = isActive ? Color(0xFF629584) : Colors.black54;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                iconList[index],
+                size: 24,
+                color: color,
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  labelList[index],
+                  maxLines: 1,
+                  style: TextStyle(color: color, fontWeight: isActive ? FontWeight.bold : FontWeight.normal),
+                ),
+              )
+            ],
+          );
+        },
+        backgroundColor: Colors.white,
+        activeIndex: _selectedIndex,
+        splashColor: Color(0xFF629584),
+        splashSpeedInMilliseconds: 300,
+        notchSmoothness: NotchSmoothness.softEdge,
+        gapLocation: GapLocation.none, // Kita tidak pakai floating button, jadi 'none'
+        onTap: (index) => setState(() => _selectedIndex = index),
+        shadow: BoxShadow(
+          color: Colors.black.withOpacity(0.15),
+          blurRadius: 10,
         ),
       ),
     );
